@@ -17,10 +17,14 @@
 package com.mbio.custom.hikaricp;
 
 import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
+import com.codahale.metrics.MetricRegistry;
+import com.zaxxer.hikari.HikariDataSource;
+
+import org.apache.nifi.annotation.behavior.DynamicProperty;
 import org.apache.nifi.annotation.documentation.CapabilityDescription;
 import org.apache.nifi.annotation.documentation.Tags;
 import org.apache.nifi.annotation.lifecycle.OnDisabled;
@@ -29,48 +33,73 @@ import org.apache.nifi.components.PropertyDescriptor;
 import org.apache.nifi.controller.AbstractControllerService;
 import org.apache.nifi.controller.ConfigurationContext;
 import org.apache.nifi.processor.exception.ProcessException;
-import org.apache.nifi.processor.util.StandardValidators;
 import org.apache.nifi.reporting.InitializationException;
 
-@Tags({ "example" })
-@CapabilityDescription("Example ControllerService implementation of MyService.")
+@Tags({"DBCP", "SQL", "Database", "HikariCP", "NICE"})
+@CapabilityDescription("Database connection pooling using HikariCP API")
+@DynamicProperty(name = "DataSource property", value = "The value to set it to",
+    description = "Property for the selected DataSource")
 public class StandardHikariCPService extends AbstractControllerService implements HikariCPService {
 
-    public static final PropertyDescriptor MY_PROPERTY = new PropertyDescriptor.Builder().name("MY_PROPERTY")
-            .displayName("My Property").description("Example Property").required(true)
-            .addValidator(StandardValidators.NON_EMPTY_VALIDATOR).build();
-
-    private static final List<PropertyDescriptor> properties;
-
-    static {
-        final List<PropertyDescriptor> props = new ArrayList<>();
-        props.add(MY_PROPERTY);
-        properties = Collections.unmodifiableList(props);
-    }
+    private AtomicReference<HikariDataSource> ds = new AtomicReference<>();
 
     @Override
     protected List<PropertyDescriptor> getSupportedPropertyDescriptors() {
-        return properties;
+      return ConfigUtil.getProperties();
     }
-
+  
+    @Override
+    protected PropertyDescriptor getSupportedDynamicPropertyDescriptor(
+        String propertyDescriptorName) {
+  
+      return ConfigUtil.getDynamicProperty(propertyDescriptorName);
+    }
+  
     /**
      * @param context the configuration context
      * @throws InitializationException if unable to create a database connection
      */
     @OnEnabled
     public void onEnabled(final ConfigurationContext context) throws InitializationException {
-
+  
+      HikariDataSource ds = new HikariDataSource();
+  
+      final String dsClassName = context.getProperty(ConfigUtil.DATASOURCE_CLASSNAME).getValue();
+      final String userName = context.getProperty(ConfigUtil.USERNAME).getValue();
+      final String password = context.getProperty(ConfigUtil.PASSWORD).getValue();
+      final boolean autoCommit = context.getProperty(ConfigUtil.AUTO_COMMIT).asBoolean();
+      final boolean metrics = context.getProperty(ConfigUtil.METRICS).asBoolean();
+  
+      ds.setDataSourceClassName(dsClassName);
+      ds.setUsername(userName);
+      ds.setPassword(password);
+      ds.setAutoCommit(autoCommit);
+  
+      if (metrics) {
+        ds.setMetricRegistry(new MetricRegistry());
+      }
+  
+      context.getProperties().entrySet().parallelStream().filter(e -> e.getKey().isDynamic())
+          .forEach(e -> {
+            ds.addDataSourceProperty(e.getKey().getName(), e.getValue());
+          });
+  
+      this.ds.set(ds);
     }
-
+  
     @OnDisabled
     public void shutdown() {
-
+      ds.get().close();
     }
-
+  
     @Override
     public Connection getConnection() throws ProcessException {
-        // TODO Auto-generated method stub
-        return null;
+      try {
+        return ds.get().getConnection();
+      }catch(SQLException e) {
+        getLogger().error("Could not get connecdtion from datasources", e);
+      }
+      return null;
     }
 
 }

@@ -35,7 +35,6 @@ public class TestStandardHikariCPService {
         final StandardHikariCPService service = new StandardHikariCPService();
         runner.addControllerService("test-good", service);
 
-        runner.setProperty(service, StandardHikariCPService.MY_PROPERTY, "test-value");
         runner.enableControllerService(service);
 
         runner.assertValid(service);
