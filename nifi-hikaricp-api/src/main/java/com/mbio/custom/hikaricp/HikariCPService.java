@@ -18,13 +18,10 @@ package com.mbio.custom.hikaricp;
 
 import org.apache.nifi.annotation.documentation.CapabilityDescription;
 import org.apache.nifi.annotation.documentation.Tags;
-import org.apache.nifi.controller.ControllerService;
-import org.apache.nifi.processor.exception.ProcessException;
+import org.apache.nifi.dbcp.DBCPService;
 
-@Tags({"example"})
-@CapabilityDescription("Example Service API.")
-public interface HikariCPService extends ControllerService {
-
-    public void execute()  throws ProcessException;
+@Tags({"DBCP", "SQL", "Database", "HikariCP", "NICE"})
+@CapabilityDescription("Database connection pooling using HikariCP API")
+public interface HikariCPService extends DBCPService {
 
 }

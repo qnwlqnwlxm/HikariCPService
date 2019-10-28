@@ -16,6 +16,7 @@
  */
 package com.mbio.custom.hikaricp;
 
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,17 +32,13 @@ import org.apache.nifi.processor.exception.ProcessException;
 import org.apache.nifi.processor.util.StandardValidators;
 import org.apache.nifi.reporting.InitializationException;
 
-@Tags({ "example"})
+@Tags({ "example" })
 @CapabilityDescription("Example ControllerService implementation of MyService.")
 public class StandardHikariCPService extends AbstractControllerService implements HikariCPService {
 
-    public static final PropertyDescriptor MY_PROPERTY = new PropertyDescriptor
-            .Builder().name("MY_PROPERTY")
-            .displayName("My Property")
-            .description("Example Property")
-            .required(true)
-            .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
-            .build();
+    public static final PropertyDescriptor MY_PROPERTY = new PropertyDescriptor.Builder().name("MY_PROPERTY")
+            .displayName("My Property").description("Example Property").required(true)
+            .addValidator(StandardValidators.NON_EMPTY_VALIDATOR).build();
 
     private static final List<PropertyDescriptor> properties;
 
@@ -57,10 +54,8 @@ public class StandardHikariCPService extends AbstractControllerService implement
     }
 
     /**
-     * @param context
-     *            the configuration context
-     * @throws InitializationException
-     *             if unable to create a database connection
+     * @param context the configuration context
+     * @throws InitializationException if unable to create a database connection
      */
     @OnEnabled
     public void onEnabled(final ConfigurationContext context) throws InitializationException {
@@ -73,8 +68,9 @@ public class StandardHikariCPService extends AbstractControllerService implement
     }
 
     @Override
-    public void execute() throws ProcessException {
-
+    public Connection getConnection() throws ProcessException {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }
