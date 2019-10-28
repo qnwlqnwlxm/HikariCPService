@@ -1,8 +1,10 @@
 .DS_Store
 .project
+derby.log
 .settings/
 .vscode/
 target/
+test/
 nifi-hikaricp/.classpath
 nifi-hikaricp/.project
 nifi-hikaricp/.settings
