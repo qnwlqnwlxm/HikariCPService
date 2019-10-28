@@ -1,1 +1,1 @@
-com.mbio.custom.hikaricp.HikariCPService
+com.mbio.custom.hikaricp.StandardHikariCPService
